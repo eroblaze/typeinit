@@ -1,0 +1,54 @@
+{
+  "name": "typeinit",
+  "version": "1.0.1",
+  "description": "An Intuitive Javascript Typing Animation Library",
+  "main": "./dist/index.umd.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.umd.js"
+    }
+  },
+  "keywords": [
+    "typeinit",
+    "javascript",
+    "typescript",
+    "animation",
+    "typing",
+    "typing effect",
+    "typewriter",
+    "typewriter effect",
+    "type effect",
+    "text effects"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest __tests__/typeinit",
+    "test:dom": "vitest -dom"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eroblaze/typeinit.git"
+  },
+  "author": "Paul Eboselume",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eroblaze/typeinit/issues"
+  },
+  "homepage": "https://github.com/eroblaze/typeinit#readme",
+  "devDependencies": {
+    "happy-dom": "^6.0.0",
+    "rollup-plugin-typescript2": "^0.32.1",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4",
+    "vite": "^2.9.9",
+    "vitest": "^0.16.0"
+  }
+}
