@@ -78,6 +78,86 @@ describe("TYPEINIT INSTANTIATION", () => {
       numOfStyleTags + 1
     );
   });
+
+  test("onStart() cb is called", () =>
+    new Promise<void>((done) => {
+      expect.assertions(1);
+      new Typeinit(".div", {
+        typingSpeed: 0,
+        onStart: () => {
+          done();
+          expect(true).toBeTruthy();
+        },
+      })
+        .type("test")
+        .play();
+    }));
+
+  test("onEnd() cb is called", () =>
+    new Promise<void>((done) => {
+      expect.assertions(1);
+      new Typeinit(".div", {
+        typingSpeed: 0,
+        onEnd: () => {
+          done();
+          expect(true).toBeTruthy();
+        },
+      })
+        .type("test")
+        .play();
+    }));
+
+  test("onCharTyped() cb is called", () =>
+    new Promise<void>((done) => {
+      expect.assertions(4);
+      new Typeinit(".div", {
+        typingSpeed: 0,
+        onCharTyped: () => {
+          expect(true).toBeTruthy();
+        },
+        onEnd: () => {
+          done();
+        },
+      })
+        .type("test")
+        .play();
+    }));
+
+  test("onCharDeleted() cb is called for each character", () =>
+    new Promise<void>((done) => {
+      expect.assertions(4);
+      new Typeinit(".div", {
+        typingSpeed: 0,
+        deletingSpeed: 0,
+        onCharDeleted: () => {
+          expect(true).toBeTruthy();
+        },
+        onEnd: () => {
+          done();
+        },
+      })
+        .type("test")
+        .deleteAll()
+        .play();
+    }));
+
+  test("onCharDeleted() cb is called for each word", () =>
+    new Promise<void>((done) => {
+      expect.assertions(1);
+      new Typeinit(".div", {
+        typingSpeed: 0,
+        deletingSpeed: 0,
+        onCharDeleted: () => {
+          expect(true).toBeTruthy();
+        },
+        onEnd: () => {
+          done();
+        },
+      })
+        .type("test")
+        .delete(1, { mode: "word" })
+        .play();
+    }));
 });
 
 describe("TYPEINIT API METHODS", () => {
@@ -94,7 +174,8 @@ describe("TYPEINIT API METHODS", () => {
         caret: false,
         typingSpeed: 0,
         onEnd: () => {
-          done(); // This should be called first before assertions inorder to avoid timeouts
+          // This should be called first before assertions inorder to avoid timeouts
+          done();
           expect(document.querySelector(".div")?.childElementCount).toBe(4);
         },
       });

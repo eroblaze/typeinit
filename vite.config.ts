@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
-      name: "typeinit",
+      name: "Typeinit",
       fileName: (format) => `index.${format}.js`,
       formats: ["es", "umd"], // This is the default
     },

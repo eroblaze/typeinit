@@ -37,7 +37,7 @@ export default class Typeinit implements TypeinitInterface {
   constructor(selector: HTMLElement | string, optionsObj?: OptionsInterface) {
     // Check the type of the selector
     if (typeof selector === "string") {
-      this.#element = this._getElement(selector);
+      this.#element = this.#_getElement(selector);
     } else {
       const tagName = selector.tagName.toLowerCase();
       if (tagName === "input" || tagName === "textarea") {
@@ -47,10 +47,10 @@ export default class Typeinit implements TypeinitInterface {
     }
     // Important to show spaces
     this.#element.style.whiteSpace = "pre-wrap";
-    this._init();
-    this._checkElementInnerText();
+    this.#_init();
+    this.#_checkElementTextContent();
 
-    optionsObj = { ...defaultOptions, ...this._confirmOptions(optionsObj) };
+    optionsObj = { ...defaultOptions, ...this.#_confirmOptions(optionsObj) };
 
     const {
       typingSpeed,
@@ -68,6 +68,8 @@ export default class Typeinit implements TypeinitInterface {
       startDelay,
       onEnd,
       onStart,
+      onCharTyped,
+      onCharDeleted,
     } = optionsObj;
 
     this.#options = {
@@ -86,12 +88,14 @@ export default class Typeinit implements TypeinitInterface {
       startDelay: startDelay!,
       onEnd: onEnd!,
       onStart: onStart!,
+      onCharTyped: onCharTyped!,
+      onCharDeleted: onCharDeleted!,
     };
 
     // Show the caret
     if (this.#options.caret) {
       this._addStyles();
-      this._createCaret();
+      this.#_createCaret();
     }
   }
 
@@ -99,7 +103,7 @@ export default class Typeinit implements TypeinitInterface {
    * Checks the display of the element
    * @private
    */
-  private _init() {
+  #_init() {
     const display = getDefaultDisplay(this.#element);
     if (display === "inline") {
       this.#element.style.display = "inline-block";
@@ -112,7 +116,7 @@ export default class Typeinit implements TypeinitInterface {
    * @returns {Object} an options Object
    * @private
    */
-  private _confirmOptions(opt?: OptionsInterface) {
+  #_confirmOptions(opt?: OptionsInterface) {
     const newOptionObj: OptionsInterface = {};
     if (opt) {
       for (let option in opt) {
@@ -121,7 +125,12 @@ export default class Typeinit implements TypeinitInterface {
 
         if (typeof value !== typeof dValue) {
           // Check if this option is a callback method
-          if (option === "onStart" || option === "onEnd") {
+          if (
+            option === "onStart" ||
+            option === "onEnd" ||
+            option === "onCharTyped" ||
+            option === "onCharDeleted"
+          ) {
             if (typeof value === "function") {
               newOptionObj[option] = value;
             } else {
@@ -153,7 +162,7 @@ export default class Typeinit implements TypeinitInterface {
           } else {
             // All negative numbers will be changed to 0
             newOptionObj[option] = 0;
-            console.warn(`argument should be a positive number`);
+            console.warn(`${option} expects a positive number, got ${value}`);
           }
         } else {
           newOptionObj[option] = value;
@@ -167,11 +176,11 @@ export default class Typeinit implements TypeinitInterface {
    * Check if there is some text in the element, if so, cut it out and pass it to "type()"
    * @private
    */
-  private _checkElementInnerText() {
-    const innerText = this.#element.innerText?.trim();
-    if (innerText) {
+  #_checkElementTextContent() {
+    const textContent = this.#element.textContent?.trim();
+    if (textContent) {
       this.#element.innerHTML = "";
-      this.type(innerText);
+      this.type(textContent);
     }
   }
 
@@ -181,7 +190,7 @@ export default class Typeinit implements TypeinitInterface {
    * @returns {Object} an HTML element
    * @private
    */
-  private _getElement(selector: string) {
+  #_getElement(selector: string) {
     const el = document.querySelector(selector);
     if (el) {
       return el as HTMLElement;
@@ -204,7 +213,7 @@ export default class Typeinit implements TypeinitInterface {
     style.innerHTML = `
     .${this.#caretClass} {
         display: inline-block;
-        width: 0.125em;
+        width: 0.0625em;
         height: 0.9em;
         transform: translateY(15%);
         border-radius: 3rem;
@@ -234,7 +243,7 @@ export default class Typeinit implements TypeinitInterface {
    * Creates the caret element in the given element
    * @private
    */
-  private _createCaret() {
+  #_createCaret() {
     // Check if there is already a caret in the element i.e a previous instance has typed in it, if so just return
     if (this.#element.querySelector(`.${this.#caretClass}`)) return;
     const c = createEl("span", "");
@@ -244,12 +253,40 @@ export default class Typeinit implements TypeinitInterface {
   }
 
   /**
+   * Removes the blinking animation from the caret element
+   * @private
+   */
+  #_removeCaretBlinking() {
+    if (this.#options.caret) {
+      const caret = this.#element.querySelector(
+        `.${this.#caretClass}`
+      ) as HTMLElement;
+      if (caret.style.animationDuration !== "0s")
+        caret.style.animationDuration = "0s";
+    }
+  }
+
+  /**
+   * Adds the blinking animation to the caret element
+   * @private
+   */
+  #_addCaretBlinking() {
+    if (this.#options.caret) {
+      const caret = this.#element.querySelector(
+        `.${this.#caretClass}`
+      ) as HTMLElement;
+      if (caret.style.animationDuration !== "1s")
+        caret.style.animationDuration = "1s";
+    }
+  }
+
+  /**
    * Adds to the timeline array
    * @param {function} func the method that was called
    * @param {*[]} message arguments passed to the called method
    * @private
    */
-  private _addtimeline(func: Function, ...message: TimelineType) {
+  #_addTimeline(func: Function, ...message: TimelineType) {
     this.#timeline.push([func, message]);
   }
 
@@ -263,7 +300,7 @@ export default class Typeinit implements TypeinitInterface {
     if (typeof message !== "string") {
       throw new Error(`'${message}' must be a string`);
     }
-    if (!this.#playCalled) this._addtimeline(this._type, message);
+    if (!this.#playCalled) this.#_addTimeline(this.#_type, message);
     return this;
   }
 
@@ -272,7 +309,9 @@ export default class Typeinit implements TypeinitInterface {
    * @param {string} message the string to type
    * @private
    */
-  private async _type(message: string) {
+  async #_type(message: string) {
+    this.#_removeCaretBlinking();
+
     // put each character in a span
     for (const ch of message) {
       const chSpan = createEl("span", ch);
@@ -282,8 +321,15 @@ export default class Typeinit implements TypeinitInterface {
       } else {
         this.#element.appendChild(chSpan);
       }
+
+      // fire onCharTyped cb
+      if (this.#options.onCharTyped) {
+        this.#options.onCharTyped();
+      }
       await delay(this.#options.typingSpeed);
     }
+
+    this.#_addCaretBlinking();
   }
 
   /**
@@ -313,7 +359,7 @@ export default class Typeinit implements TypeinitInterface {
     }
 
     if (!this.#playCalled)
-      this._addtimeline(this._del, numToDel, {
+      this.#_addTimeline(this.#_del, numToDel, {
         mode,
         speed,
         delay: deleteDelay,
@@ -328,7 +374,7 @@ export default class Typeinit implements TypeinitInterface {
    * @param {Object} [deleteOptions] sets the mode, delay and speed of the deletion
    * @private
    */
-  private async _del(numToDel: number, deleteOptions?: DeleteOptionsInterface) {
+  async #_del(numToDel: number, deleteOptions?: DeleteOptionsInterface) {
     const mode = deleteOptions?.mode ?? "char";
     const speed = deleteOptions?.speed ?? this.#options.deletingSpeed;
     const deleteDelay = deleteOptions?.delay ?? this.#options.deleteDelay;
@@ -345,6 +391,11 @@ export default class Typeinit implements TypeinitInterface {
           this.#element.removeChild(
             getLastChild(this.#element, this.#options.caret)
           );
+
+          // fire onCharDeleted cb
+          if (this.#options.onCharDeleted) {
+            this.#options.onCharDeleted();
+          }
           await delay(speed);
         }
       } else {
@@ -404,6 +455,10 @@ export default class Typeinit implements TypeinitInterface {
             }
           }
           numToDelCount++;
+          // fire onCharDeleted cb for each word deleted
+          if (this.#options.onCharDeleted) {
+            this.#options.onCharDeleted();
+          }
         }
       }
     }
@@ -435,7 +490,7 @@ export default class Typeinit implements TypeinitInterface {
     }
 
     if (!this.#playCalled)
-      this._addtimeline(this._delAll, ease, { speed, delay: deleteDelay });
+      this.#_addTimeline(this.#_delAll, ease, { speed, delay: deleteDelay });
     return this;
   }
 
@@ -445,7 +500,7 @@ export default class Typeinit implements TypeinitInterface {
    * @param {Object} [deleteAllOptions] sets the speed and delay of the deletion
    * @private
    */
-  private async _delAll(
+  async #_delAll(
     ease: boolean = true,
     deleteAllOptions?: DeleteAllOptionsInterface
   ) {
@@ -466,12 +521,20 @@ export default class Typeinit implements TypeinitInterface {
           numOfEntry++;
         }
         this.#numOfEntry = 0;
+        // fire onCharDeleted cb
+        if (this.#options.onCharDeleted) {
+          this.#options.onCharDeleted();
+        }
       } else {
         let numOfEntry = 0;
         while (numOfEntry < this.#numOfEntry) {
           this.#element.removeChild(
             getLastChild(this.#element, this.#options.caret)
           );
+          // fire onCharDeleted cb
+          if (this.#options.onCharDeleted) {
+            this.#options.onCharDeleted();
+          }
           await delay(speed);
           numOfEntry++;
         }
@@ -490,7 +553,7 @@ export default class Typeinit implements TypeinitInterface {
     if (!isNumber(numOfLines)) {
       throw new Error(`'${numOfLines}' must be a number`);
     }
-    if (!this.#playCalled) this._addtimeline(this._newLine, numOfLines);
+    if (!this.#playCalled) this.#_addTimeline(this.#_newLine, numOfLines);
     return this;
   }
 
@@ -499,7 +562,9 @@ export default class Typeinit implements TypeinitInterface {
    * @param {number} [numOfLines=1] the number of new lines to add
    * @private
    */
-  private async _newLine(numOfLines: number) {
+  async #_newLine(numOfLines: number) {
+    this.#_removeCaretBlinking();
+
     for (let i = 0; i < numOfLines; i++) {
       this.#numOfEntry++;
 
@@ -509,8 +574,15 @@ export default class Typeinit implements TypeinitInterface {
       } else {
         this.#element.appendChild(line);
       }
+
+      // fire onCharTyped cb
+      if (this.#options.onCharTyped) {
+        this.#options.onCharTyped();
+      }
       await delay(this.#options.typingSpeed);
     }
+
+    this.#_addCaretBlinking();
   }
 
   /**
@@ -523,7 +595,7 @@ export default class Typeinit implements TypeinitInterface {
     if (!isNumber(ms)) {
       throw new Error(`'${ms}' must be a number`);
     }
-    if (!this.#playCalled) this._addtimeline(this._pause, ms);
+    if (!this.#playCalled) this.#_addTimeline(this.#_pause, ms);
     return this;
   }
 
@@ -532,7 +604,7 @@ export default class Typeinit implements TypeinitInterface {
    * @param {number} [ms=options.pause] the amount of time in milliseconds to pause
    * @private
    */
-  private async _pause(ms: number) {
+  async #_pause(ms: number) {
     return delay(ms);
   }
 
@@ -541,14 +613,14 @@ export default class Typeinit implements TypeinitInterface {
    * @public
    */
   public play() {
-    this._play();
+    this.#_play();
   }
 
   /**
    * Begin animation
    * @private
    */
-  private async _play() {
+  async #_play() {
     // Set this.#playCalled to true to prevent multiple references of a Typeinit instance from adding to the timeline after play has been called once
     if (!this.#playCalled || this.#isRepeating) {
       this.#playCalled = true;
@@ -577,12 +649,12 @@ export default class Typeinit implements TypeinitInterface {
         if (this.#repeatCount < this.#options.repeat) {
           this.#isRepeating = true;
           if (this.#options.repeatEase) {
-            await this._delAll(true, { speed: this.#options.repeatSpeed });
+            await this.#_delAll(true, { speed: this.#options.repeatSpeed });
           } else {
-            await this._delAll(false);
+            await this.#_delAll(false);
           }
           await delay(this.#options.repeatDelay);
-          this._play();
+          this.#_play();
           this.#repeatCount++;
         } else {
           this.#repeatCount = 0;
@@ -594,18 +666,17 @@ export default class Typeinit implements TypeinitInterface {
         this.#isRepeating = true;
 
         if (this.#options.repeatEase) {
-          await this._delAll(true, { speed: this.#options.repeatSpeed });
+          await this.#_delAll(true, { speed: this.#options.repeatSpeed });
         } else {
-          await this._delAll(false);
+          await this.#_delAll(false);
         }
         await delay(this.#options.repeatDelay);
-        this._play();
+        this.#_play();
       }
-    }
-
-    //  Full animation is complete, fire onEnd cb
-    if (!this.#isRepeating && this.#options.onEnd) {
-      this.#options.onEnd();
+      //  Full animation is complete, fire onEnd cb
+      if (!this.#isRepeating && this.#options.onEnd) {
+        this.#options.onEnd();
+      }
     }
   }
 }

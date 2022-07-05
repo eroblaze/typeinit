@@ -9,7 +9,7 @@ export const defaultOptions: OptionsInterface = {
   /**
    * @property {number} startDelay time before typing starts in milliseconds
    */
-  startDelay: 250,
+  startDelay: 0,
 
   /**
    * @property {number} typingSpeed typing speed in milliseconds
@@ -26,6 +26,9 @@ export const defaultOptions: OptionsInterface = {
    */
   deleteDelay: 300,
 
+  /**
+   * @property {number} pause the amount of time in milliseconds to pause
+   */
   pause: 1000,
 
   /**
@@ -36,8 +39,8 @@ export const defaultOptions: OptionsInterface = {
    */
   repeat: 0,
   repeatEase: false,
-  repeatSpeed: 750,
-  repeatDelay: 0,
+  repeatSpeed: 0,
+  repeatDelay: 750,
 
   /**
    * @property {boolean} caret show caret
@@ -62,4 +65,14 @@ export const defaultOptions: OptionsInterface = {
    * @property {function} onEnd function to call when all typing is complete
    */
   onEnd: undefined,
+
+  /**
+   * @property {function} onCharTyped function to call on each character typed
+   */
+  onCharTyped: undefined,
+
+  /**
+   * @property {function} onCharDeleted function to call on each character or word deleted
+   */
+  onCharDeleted: undefined,
 };
