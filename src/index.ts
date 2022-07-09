@@ -34,6 +34,7 @@ export default class Typeinit implements TypeinitInterface {
   #caretClass = "typeinit__caret";
   #repeatCount = 0;
   #numOfEntry = 0;
+  #resetCalled = false;
 
   constructor(selector: HTMLElement | string, optionsObj?: OptionsInterface) {
     // Check the type of the selector
@@ -538,9 +539,14 @@ export default class Typeinit implements TypeinitInterface {
           numOfEntry++;
         }
         this.#numOfEntry = 0;
-        // fire onCharDeleted cb
-        if (this.#options.onCharDeleted) {
-          this.#options.onCharDeleted();
+        // Fire the onCharDeleted cb if reset() wasn't called
+        if (!this.#resetCalled) {
+          // fire onCharDeleted cb
+          if (this.#options.onCharDeleted) {
+            this.#options.onCharDeleted();
+          }
+        } else {
+          this.#resetCalled = false;
         }
       } else {
         let numOfEntry = 0;
@@ -626,16 +632,18 @@ export default class Typeinit implements TypeinitInterface {
   }
 
   /**
-   * reset
+   * Resets the typing animation
+   * @public
    */
   public reset() {
     this.#_reset();
   }
 
+  /**
+   * Clear the current timeoutId and then reset all related variables
+   * @private
+   */
   async #_reset() {
-    //delete everything
-    console.log("reset", this.#intervalId);
-
     clearInterval(this.#intervalId);
     await this.#_delAll(false, { delay: 0 });
 
@@ -649,6 +657,7 @@ export default class Typeinit implements TypeinitInterface {
     this.#isRepeating = false;
     this.#repeatCount = 0;
     this.#numOfEntry = 0;
+    this.#resetCalled = true;
 
     this.#_play();
   }
@@ -680,6 +689,7 @@ export default class Typeinit implements TypeinitInterface {
               this.#controller
             );
           } catch {
+            // reset() was called so just return out of this function
             return;
           }
         }
