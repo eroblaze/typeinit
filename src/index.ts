@@ -8,7 +8,6 @@ import {
 } from "./types";
 
 import {
-  delay,
   createEl,
   getLastChild,
   waitUntilVisibleFunc,
@@ -28,6 +27,8 @@ export default class Typeinit implements TypeinitInterface {
   #element: HTMLElement;
   #options: Required<OptionsInterface>;
   #timeline: [Function, TimelineType][] = [];
+  #intervalId = 0 as unknown as NodeJS.Timeout;
+  #controller = new AbortController();
   #playCalled = false;
   #isRepeating = false;
   #caretClass = "typeinit__caret";
@@ -291,6 +292,22 @@ export default class Typeinit implements TypeinitInterface {
   }
 
   /**
+   * Delay execution for some time
+   * @param {number} ms the time in milliseconds for the execution to be delayed
+   * @returns {Promise<void>}
+   * @private
+   */
+  #delay(ms: number) {
+    return new Promise<void>((res) => {
+      const intId = setTimeout(() => {
+        clearInterval(intId);
+        res();
+      }, ms);
+      this.#intervalId = intId;
+    });
+  }
+
+  /**
    * Types out each character
    * @param {string} message the string to type
    * @returns {Object} a typeinit Object
@@ -326,7 +343,7 @@ export default class Typeinit implements TypeinitInterface {
       if (this.#options.onCharTyped) {
         this.#options.onCharTyped();
       }
-      await delay(this.#options.typingSpeed);
+      await this.#delay(this.#options.typingSpeed);
     }
 
     this.#_addCaretBlinking();
@@ -383,7 +400,7 @@ export default class Typeinit implements TypeinitInterface {
     const numOfChildrenToCheck = this.#options.caret ? 1 : 0;
     if (this.#element.childElementCount > numOfChildrenToCheck) {
       // Pause a bit before deleting
-      await delay(deleteDelay);
+      await this.#delay(deleteDelay);
 
       if (mode === "char") {
         for (let i = 0; i < numToDel; i++) {
@@ -396,7 +413,7 @@ export default class Typeinit implements TypeinitInterface {
           if (this.#options.onCharDeleted) {
             this.#options.onCharDeleted();
           }
-          await delay(speed);
+          await this.#delay(speed);
         }
       } else {
         // mode === "word"
@@ -426,32 +443,32 @@ export default class Typeinit implements TypeinitInterface {
                     if (!prevContent.trim()) {
                       // Yayy there is a space before our last child so delete the last child and break
                       this.#element.removeChild(lastChild);
-                      await delay(speed);
+                      await this.#delay(speed);
                       break;
                     }
                     // There is a character in the previous sibling so just delete last child
                     this.#element.removeChild(lastChild);
-                    await delay(speed);
+                    await this.#delay(speed);
                   } else {
                     // If the text content of the previous element is null, that means the element is <br>. So just delete current element and break
                     this.#element.removeChild(lastChild);
-                    await delay(speed);
+                    await this.#delay(speed);
                     break;
                   }
                 } else {
                   // This is the first character
                   this.#element.removeChild(lastChild);
-                  await delay(speed);
+                  await this.#delay(speed);
                 }
               } else {
                 // Current character is a space i.e there is no character in last child so just delete it
                 this.#element.removeChild(lastChild);
-                await delay(speed);
+                await this.#delay(speed);
               }
             } else {
               // Text content is null. This means the element is <br> so just delete it
               this.#element.removeChild(lastChild);
-              await delay(speed);
+              await this.#delay(speed);
             }
           }
           numToDelCount++;
@@ -511,7 +528,7 @@ export default class Typeinit implements TypeinitInterface {
 
     if (this.#element.childElementCount > numOfChildrenToCheck) {
       // Pause a bit before deleting
-      await delay(deleteDelay);
+      await this.#delay(deleteDelay);
 
       if (ease === false) {
         // Remove all the characters the same time
@@ -535,7 +552,7 @@ export default class Typeinit implements TypeinitInterface {
           if (this.#options.onCharDeleted) {
             this.#options.onCharDeleted();
           }
-          await delay(speed);
+          await this.#delay(speed);
           numOfEntry++;
         }
         this.#numOfEntry = 0;
@@ -579,7 +596,7 @@ export default class Typeinit implements TypeinitInterface {
       if (this.#options.onCharTyped) {
         this.#options.onCharTyped();
       }
-      await delay(this.#options.typingSpeed);
+      await this.#delay(this.#options.typingSpeed);
     }
 
     this.#_addCaretBlinking();
@@ -605,7 +622,35 @@ export default class Typeinit implements TypeinitInterface {
    * @private
    */
   async #_pause(ms: number) {
-    return delay(ms);
+    return this.#delay(ms);
+  }
+
+  /**
+   * reset
+   */
+  public reset() {
+    this.#_reset();
+  }
+
+  async #_reset() {
+    //delete everything
+    console.log("reset", this.#intervalId);
+
+    clearInterval(this.#intervalId);
+    await this.#_delAll(false, { delay: 0 });
+
+    if (this.#options.waitUntilVisible) {
+      this.#controller.abort();
+      this.#controller = new AbortController();
+    }
+
+    this.#intervalId = 0 as unknown as NodeJS.Timeout;
+    this.#playCalled = false;
+    this.#isRepeating = false;
+    this.#repeatCount = 0;
+    this.#numOfEntry = 0;
+
+    this.#_play();
   }
 
   /**
@@ -628,12 +673,17 @@ export default class Typeinit implements TypeinitInterface {
       if (!this.#isRepeating) {
         // This is the first time 'play()' is called because 'this.#playCalled' is false and 'this.#isRepeating' is also false
         if (this.#options.waitUntilVisible) {
-          await waitUntilVisibleFunc(
-            this.#element,
-            this.#options.visibleOptions
-          );
+          try {
+            await waitUntilVisibleFunc(
+              this.#element,
+              this.#options.visibleOptions,
+              this.#controller
+            );
+          } catch {
+            return;
+          }
         }
-        await delay(this.#options.startDelay);
+        await this.#delay(this.#options.startDelay);
       }
 
       for (const action of this.#timeline) {
@@ -653,14 +703,12 @@ export default class Typeinit implements TypeinitInterface {
           } else {
             await this.#_delAll(false);
           }
-          await delay(this.#options.repeatDelay);
+          await this.#delay(this.#options.repeatDelay);
           this.#_play();
           this.#repeatCount++;
         } else {
           this.#repeatCount = 0;
           this.#isRepeating = false;
-          // Delete the timeline array
-          // this.timeline = [];
         }
       } else if (this.#options.repeat === "infinite") {
         this.#isRepeating = true;
@@ -670,7 +718,7 @@ export default class Typeinit implements TypeinitInterface {
         } else {
           await this.#_delAll(false);
         }
-        await delay(this.#options.repeatDelay);
+        await this.#delay(this.#options.repeatDelay);
         this.#_play();
       }
       //  Full animation is complete, fire onEnd cb

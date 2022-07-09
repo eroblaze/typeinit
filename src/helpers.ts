@@ -1,18 +1,6 @@
 import { VisibleOptionsType, VisibleOptionsTypeCombine } from "./types";
 
 /**
- * Delay execution for some time
- * @param {number} ms the time in milliseconds for the execution to be delayed
- * @returns {Promise<void>}
- * @private
- */
-export function delay(ms: number) {
-  return new Promise((res) => {
-    setTimeout(res, ms!);
-  });
-}
-
-/**
  * Creates a new HTML element
  * @param {string} type the type of HTML element to create
  * @param {string} textContent the text to put in the new HTML element
@@ -49,11 +37,16 @@ export function getLastChild(el: HTMLElement, caret: boolean = false) {
  */
 export function waitUntilVisibleFunc(
   el: HTMLElement,
-  waitTill: VisibleOptionsType | VisibleOptionsTypeCombine
+  waitTill: VisibleOptionsType | VisibleOptionsTypeCombine,
+  controller: AbortController
 ) {
   const vPortHeight = window.innerHeight;
 
-  return new Promise<void>((res) => {
+  return new Promise<void>((res, rej) => {
+    controller.signal.addEventListener("abort", () => {
+      rej();
+    });
+
     // First check if the element is currently visible i.e if the half of the element is in the viewport
     if (el.getBoundingClientRect().top + el.offsetHeight / 2 <= vPortHeight) {
       // The center of the element is above the bottom of the viewport that means the element is visible
