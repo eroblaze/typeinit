@@ -5,7 +5,6 @@ export type VisibleOptionsTypeCombine =
   `${VisibleOptionsType} ${VisibleOptionsType}`;
 
 export type DeleteType = "char" | "word";
-
 export type WriterType = Typeinit;
 
 export interface OptionsInterface {
@@ -20,6 +19,7 @@ export interface OptionsInterface {
   repeatDelay?: number;
   caret?: boolean;
   caretColor?: string;
+  caretWidth?: number;
   waitUntilVisible?: boolean;
   visibleOptions?: VisibleOptionsType | VisibleOptionsTypeCombine;
   onStart?: () => void;

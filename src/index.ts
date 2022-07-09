@@ -64,6 +64,7 @@ export default class Typeinit implements TypeinitInterface {
       repeatDelay,
       caret,
       caretColor,
+      caretWidth,
       waitUntilVisible,
       visibleOptions,
       deleteDelay,
@@ -84,6 +85,7 @@ export default class Typeinit implements TypeinitInterface {
       repeatDelay: repeatDelay!,
       caret: caret!,
       caretColor: caretColor!,
+      caretWidth: caretWidth!,
       waitUntilVisible: waitUntilVisible!,
       visibleOptions: visibleOptions!,
       deleteDelay: deleteDelay!,
@@ -215,7 +217,7 @@ export default class Typeinit implements TypeinitInterface {
     style.innerHTML = `
     .${this.#caretClass} {
         display: inline-block;
-        width: 0.0625em;
+        width: ${this.#options.caretWidth / 16}em;
         height: 0.9em;
         transform: translateY(15%);
         border-radius: 3rem;

@@ -45,9 +45,11 @@ export const defaultOptions: OptionsInterface = {
   /**
    * @property {boolean} caret show caret
    * @property {string} caretStyle color applied to the caret element
+   * @property {string} caretWidth the width of the caret
    */
   caret: true,
   caretColor: "currentcolor",
+  caretWidth: 1,
 
   /**
    * @property {boolean} waitUntilVisible Start the animation only when the element is within the viewport
