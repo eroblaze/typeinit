@@ -8,7 +8,6 @@ import {
 } from "./types";
 
 import {
-  delay,
   createEl,
   getLastChild,
   waitUntilVisibleFunc,
@@ -28,11 +27,13 @@ export default class Typeinit implements TypeinitInterface {
   #element: HTMLElement;
   #options: Required<OptionsInterface>;
   #timeline: [Function, TimelineType][] = [];
+  #intervalId: NodeJS.Timeout = 0 as unknown as NodeJS.Timeout;
   #playCalled = false;
   #isRepeating = false;
   #caretClass = "typeinit__caret";
   #repeatCount = 0;
   #numOfEntry = 0;
+  #controller = new AbortController();
 
   constructor(selector: HTMLElement | string, optionsObj?: OptionsInterface) {
     // Check the type of the selector
@@ -311,24 +312,7 @@ export default class Typeinit implements TypeinitInterface {
    */
   async #_type(message: string) {
     this.#_removeCaretBlinking();
-
-    // put each character in a span
-    for (const ch of message) {
-      const chSpan = createEl("span", ch);
-      this.#numOfEntry++;
-      if (this.#options.caret) {
-        this.#element.insertBefore(chSpan, this.#element.lastElementChild);
-      } else {
-        this.#element.appendChild(chSpan);
-      }
-
-      // fire onCharTyped cb
-      if (this.#options.onCharTyped) {
-        this.#options.onCharTyped();
-      }
-      await delay(this.#options.typingSpeed);
-    }
-
+    await this.#typePromise(message, "span");
     this.#_addCaretBlinking();
   }
 
@@ -383,21 +367,10 @@ export default class Typeinit implements TypeinitInterface {
     const numOfChildrenToCheck = this.#options.caret ? 1 : 0;
     if (this.#element.childElementCount > numOfChildrenToCheck) {
       // Pause a bit before deleting
-      await delay(deleteDelay);
+      await this.#delayPromise(deleteDelay);
 
       if (mode === "char") {
-        for (let i = 0; i < numToDel; i++) {
-          this.#numOfEntry--;
-          this.#element.removeChild(
-            getLastChild(this.#element, this.#options.caret)
-          );
-
-          // fire onCharDeleted cb
-          if (this.#options.onCharDeleted) {
-            this.#options.onCharDeleted();
-          }
-          await delay(speed);
-        }
+        await this.#deletePromise(numToDel, numOfChildrenToCheck, speed);
       } else {
         // mode === "word"
         let numToDelCount = 0;
@@ -407,54 +380,9 @@ export default class Typeinit implements TypeinitInterface {
           numToDelCount < numToDel
         ) {
           // Run for each word to delete
-          while (this.#element.childElementCount > numOfChildrenToCheck) {
-            this.#numOfEntry--;
-            // Break out only when there is a space i.e an empty element before a character
-            const lastChild = getLastChild(this.#element, this.#options.caret);
-            const content = lastChild.textContent;
-            const previousSibling = lastChild.previousElementSibling;
-
-            if (content) {
-              // Make sure the current character is not a space and there is a space before it before breaking
-              if (content.trim()) {
-                // This is not a space character
-                if (previousSibling) {
-                  // There is a previous sibling
-                  const prevContent = previousSibling.textContent;
-                  // If there is no content, break. Else continue
-                  if (prevContent) {
-                    if (!prevContent.trim()) {
-                      // Yayy there is a space before our last child so delete the last child and break
-                      this.#element.removeChild(lastChild);
-                      await delay(speed);
-                      break;
-                    }
-                    // There is a character in the previous sibling so just delete last child
-                    this.#element.removeChild(lastChild);
-                    await delay(speed);
-                  } else {
-                    // If the text content of the previous element is null, that means the element is <br>. So just delete current element and break
-                    this.#element.removeChild(lastChild);
-                    await delay(speed);
-                    break;
-                  }
-                } else {
-                  // This is the first character
-                  this.#element.removeChild(lastChild);
-                  await delay(speed);
-                }
-              } else {
-                // Current character is a space i.e there is no character in last child so just delete it
-                this.#element.removeChild(lastChild);
-                await delay(speed);
-              }
-            } else {
-              // Text content is null. This means the element is <br> so just delete it
-              this.#element.removeChild(lastChild);
-              await delay(speed);
-            }
-          }
+          await this.#deleteAllPromise(numOfChildrenToCheck, speed);
           numToDelCount++;
+
           // fire onCharDeleted cb for each word deleted
           if (this.#options.onCharDeleted) {
             this.#options.onCharDeleted();
@@ -511,7 +439,7 @@ export default class Typeinit implements TypeinitInterface {
 
     if (this.#element.childElementCount > numOfChildrenToCheck) {
       // Pause a bit before deleting
-      await delay(deleteDelay);
+      await this.#delayPromise(deleteDelay);
 
       if (ease === false) {
         // Remove all the characters the same time
@@ -526,19 +454,11 @@ export default class Typeinit implements TypeinitInterface {
           this.#options.onCharDeleted();
         }
       } else {
-        let numOfEntry = 0;
-        while (numOfEntry < this.#numOfEntry) {
-          this.#element.removeChild(
-            getLastChild(this.#element, this.#options.caret)
-          );
-          // fire onCharDeleted cb
-          if (this.#options.onCharDeleted) {
-            this.#options.onCharDeleted();
-          }
-          await delay(speed);
-          numOfEntry++;
-        }
-        this.#numOfEntry = 0;
+        await this.#deletePromise(
+          this.#numOfEntry,
+          numOfChildrenToCheck,
+          speed
+        );
       }
     }
   }
@@ -564,24 +484,7 @@ export default class Typeinit implements TypeinitInterface {
    */
   async #_newLine(numOfLines: number) {
     this.#_removeCaretBlinking();
-
-    for (let i = 0; i < numOfLines; i++) {
-      this.#numOfEntry++;
-
-      const line = createEl("br", "");
-      if (this.#options.caret) {
-        this.#element.insertBefore(line, this.#element.lastElementChild);
-      } else {
-        this.#element.appendChild(line);
-      }
-
-      // fire onCharTyped cb
-      if (this.#options.onCharTyped) {
-        this.#options.onCharTyped();
-      }
-      await delay(this.#options.typingSpeed);
-    }
-
+    await this.#typePromise(numOfLines, "br");
     this.#_addCaretBlinking();
   }
 
@@ -605,7 +508,35 @@ export default class Typeinit implements TypeinitInterface {
    * @private
    */
   async #_pause(ms: number) {
-    return delay(ms);
+    await this.#delayPromise(ms);
+  }
+
+  /**
+   * reset
+   */
+  public reset() {
+    this.#_reset();
+  }
+
+  async #_reset() {
+    //delete everything
+    console.log("reset", this.#intervalId);
+
+    clearInterval(this.#intervalId);
+    await this.#_delAll(false, { delay: 0 });
+
+    if (this.#options.waitUntilVisible) {
+      this.#controller.abort();
+      this.#controller = new AbortController();
+    }
+
+    this.#intervalId = 0 as unknown as NodeJS.Timeout;
+    this.#playCalled = false;
+    this.#isRepeating = false;
+    this.#repeatCount = 0;
+    this.#numOfEntry = 0;
+
+    this.#_play();
   }
 
   /**
@@ -628,12 +559,17 @@ export default class Typeinit implements TypeinitInterface {
       if (!this.#isRepeating) {
         // This is the first time 'play()' is called because 'this.#playCalled' is false and 'this.#isRepeating' is also false
         if (this.#options.waitUntilVisible) {
-          await waitUntilVisibleFunc(
-            this.#element,
-            this.#options.visibleOptions
-          );
+          try {
+            await waitUntilVisibleFunc(
+              this.#element,
+              this.#options.visibleOptions,
+              this.#controller
+            );
+          } catch (e) {
+            return;
+          }
         }
-        await delay(this.#options.startDelay);
+        await this.#delayPromise(this.#options.startDelay);
       }
 
       for (const action of this.#timeline) {
@@ -653,14 +589,12 @@ export default class Typeinit implements TypeinitInterface {
           } else {
             await this.#_delAll(false);
           }
-          await delay(this.#options.repeatDelay);
-          this.#_play();
+          await this.#delayPromise(this.#options.repeatDelay);
           this.#repeatCount++;
+          this.#_play();
         } else {
           this.#repeatCount = 0;
           this.#isRepeating = false;
-          // Delete the timeline array
-          // this.timeline = [];
         }
       } else if (this.#options.repeat === "infinite") {
         this.#isRepeating = true;
@@ -670,7 +604,7 @@ export default class Typeinit implements TypeinitInterface {
         } else {
           await this.#_delAll(false);
         }
-        await delay(this.#options.repeatDelay);
+        await this.#delayPromise(this.#options.repeatDelay);
         this.#_play();
       }
       //  Full animation is complete, fire onEnd cb
@@ -678,5 +612,145 @@ export default class Typeinit implements TypeinitInterface {
         this.#options.onEnd();
       }
     }
+  }
+
+  /**
+   * Delay execution for some time
+   * @param {number} ms the time in milliseconds for the execution to be delayed
+   * @returns {Promise<void>}
+   * @private
+   */
+  #delayPromise(ms: number) {
+    return new Promise<void>((res) => {
+      const intId = setTimeout(() => {
+        clearInterval(intId);
+        res();
+      }, ms!);
+      this.#intervalId = intId;
+    });
+  }
+
+  #typePromise(message: string | number, type: string) {
+    return new Promise<void>((res) => {
+      let charCount = 0;
+      const numToReach = typeof message === "string" ? message.length : message;
+
+      const intId = setInterval(() => {
+        // put each character in a HTML element
+        let textContent = "";
+        if (typeof message === "string") {
+          textContent = message[charCount];
+        } else textContent = "";
+
+        const element = createEl(type, textContent);
+        this.#numOfEntry++;
+
+        if (this.#options.caret) {
+          this.#element.insertBefore(element, this.#element.lastElementChild);
+        } else {
+          this.#element.appendChild(element);
+        }
+
+        // fire onCharTyped cb
+        if (this.#options.onCharTyped) {
+          this.#options.onCharTyped();
+        }
+
+        charCount++;
+
+        if (charCount === numToReach) {
+          clearInterval(intId);
+          res();
+        }
+      }, this.#options.typingSpeed);
+
+      this.#intervalId = intId;
+    });
+  }
+
+  #deletePromise(numToDel: number, toCheck: number, speed: number) {
+    return new Promise<void>((res) => {
+      let charCount = 0;
+
+      const intId = setInterval(() => {
+        if (this.#element.childElementCount > toCheck) {
+          this.#numOfEntry--;
+          this.#element.removeChild(
+            getLastChild(this.#element, this.#options.caret)
+          );
+
+          // fire onCharDeleted cb
+          if (this.#options.onCharDeleted) {
+            this.#options.onCharDeleted();
+          }
+
+          charCount++;
+
+          if (charCount === numToDel) {
+            clearInterval(intId);
+            res();
+          }
+        } else {
+          clearInterval(intId);
+          res();
+        }
+      }, speed);
+      this.#intervalId = intId;
+    });
+  }
+
+  #deleteAllPromise(toCheck: number, speed: number) {
+    return new Promise<void>((res) => {
+      const intId = setInterval(() => {
+        if (this.#element.childElementCount > toCheck) {
+          this.#numOfEntry--;
+          // Break out only when there is a space i.e an empty element before a character
+          const lastChild = getLastChild(this.#element, this.#options.caret);
+          const content = lastChild.textContent;
+          const previousSibling = lastChild.previousElementSibling;
+
+          if (content) {
+            // Make sure the current character is not a space and there is a space before it before breaking
+            if (content.trim()) {
+              // This is not a space character
+              if (previousSibling) {
+                // There is a previous sibling
+                const prevContent = previousSibling.textContent;
+                // If there is no content, break. Else continue
+                if (prevContent) {
+                  if (!prevContent.trim()) {
+                    // Yayy there is a space before our last child so delete the last child and break
+                    this.#element.removeChild(lastChild);
+                    clearInterval(intId);
+                    res();
+                  } else {
+                    // There is a character in the previous sibling so just delete last child
+                    this.#element.removeChild(lastChild);
+                  }
+                } else {
+                  // If the text content of the previous element is null, that means the element is <br>. So just delete current element and break
+                  this.#element.removeChild(lastChild);
+                  clearInterval(intId);
+                  res();
+                }
+              } else {
+                // This is the first character
+                this.#element.removeChild(lastChild);
+              }
+            } else {
+              // Current character is a space i.e there is no character in last child so just delete it
+              this.#element.removeChild(lastChild);
+            }
+          } else {
+            // Text content is null. This means the element is <br> so just delete it
+            this.#element.removeChild(lastChild);
+          }
+        } else {
+          clearInterval(intId);
+          res();
+        }
+      }, speed);
+      this.#intervalId = intId;
+    });
   }
 }
