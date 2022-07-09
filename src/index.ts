@@ -520,8 +520,6 @@ export default class Typeinit implements TypeinitInterface {
 
   async #_reset() {
     //delete everything
-    console.log("reset", this.#intervalId);
-
     clearInterval(this.#intervalId);
     await this.#_delAll(false, { delay: 0 });
 
