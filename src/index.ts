@@ -252,6 +252,7 @@ export default class Typeinit implements TypeinitInterface {
     if (this.#element.querySelector(`.${this.#caretClass}`)) return;
     const c = createEl("span", "");
     c.classList.add(this.#caretClass);
+    c.setAttribute("aria-hidden", "true");
     c.style.background = this.#options.caretColor;
     this.#element.appendChild(c);
   }

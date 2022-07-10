@@ -59,22 +59,22 @@ export const defaultOptions: OptionsInterface = {
   visibleOptions: "center bottom",
 
   /**
-   * @property {function} onStart function to call before it begins typing
+   * Before it begins typing
    */
   onStart: undefined,
 
   /**
-   * @property {function} onEnd function to call when all typing is complete
+   * All typing is complete
    */
   onEnd: undefined,
 
   /**
-   * @property {function} onCharTyped function to call on each character typed
+   * After each character is typed
    */
   onCharTyped: undefined,
 
   /**
-   * @property {function} onCharDeleted function to call on each character or word deleted
+   * After each character is deleted
    */
   onCharDeleted: undefined,
 };

@@ -30,7 +30,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest __tests__/typeinit",
+    "test": "vitest __tests__/",
     "test:dom": "vitest -dom"
   },
   "repository": {
