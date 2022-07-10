@@ -642,7 +642,7 @@ export default class Typeinit implements TypeinitInterface {
   }
 
   /**
-   * Clear the current timeoutId and then reset all related variables
+   * Clear the current timeoutId and reset all related variables
    * @private
    */
   async #_reset() {
