@@ -1,6 +1,6 @@
 {
   "name": "typeinit",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "An Intuitive Javascript Typing Animation Library",
   "main": "./dist/index.umd.js",
   "module": "./dist/index.es.js",
