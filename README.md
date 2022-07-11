@@ -18,6 +18,7 @@ There are typing animation libraries available out there but most are really dif
 Typeinit is a javascript typing animation library which is easy and intuitive to use. It is a _plug and play_ library which produces really smooth animations without headaches.
 
 ## Features
+
 - Offers a chainable API for ease of use.
 - Choose to delay the animation until the target element becomes visible on the screen.
 - Define strings to type programmatically or in the HTML (a useful fallback in case the user doesn't have JavaScript enabled, as well as for SEO).
@@ -36,7 +37,7 @@ npm install typeinit
 #### via CDN
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/typeinit@1.2.0/dist/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/typeinit@1.2.2/dist/index.umd.js"></script>
 ```
 
 ## Setup
@@ -48,9 +49,7 @@ After NPM installation
 ```javascript
 import Typeinit from "typeinit";
 
-new Typeinit(".element")
-    .type("Hello world!")
-    .play();
+new Typeinit(".element").type("Hello world!").play();
 ```
 
 #### javascript (ES5+)
@@ -66,12 +65,10 @@ With CDN
   <body>
     <div class="element"></div>
     <!-- Typeinit CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/typeinit@1.2.0/dist/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/typeinit@1.2.2/dist/index.umd.js"></script>
     <script>
       const typeinit = new Typeinit(".element");
-      typeinit
-        .type("Hello world!")
-        .play();
+      typeinit.type("Hello world!").play();
     </script>
   </body>
 </html>
