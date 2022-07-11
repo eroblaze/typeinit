@@ -217,9 +217,9 @@ export default class Typeinit implements TypeinitInterface {
     style.innerHTML = `
     .${this.#caretClass} {
         display: inline-block;
-        width: ${this.#options.caretWidth / 16}em;
+        width: ${this.#options.caretWidth}px;
         height: 0.9em;
-        transform: translateY(15%);
+        transform: translateY(9%);
         border-radius: 3rem;
         animation: blink-${this.#caretClass} 1s infinite;
     }
@@ -648,12 +648,11 @@ export default class Typeinit implements TypeinitInterface {
    */
   async #_reset() {
     clearInterval(this.#intervalId);
-    await this.#_delAll(false, { delay: 0 });
-
     if (this.#options.waitUntilVisible) {
       this.#controller.abort();
       this.#controller = new AbortController();
     }
+    await this.#_delAll(false, { delay: 0 });
 
     this.#intervalId = 0 as unknown as NodeJS.Timeout;
     this.#playCalled = false;
@@ -698,7 +697,6 @@ export default class Typeinit implements TypeinitInterface {
         }
         await this.#delay(this.#options.startDelay);
       }
-
       for (const action of this.#timeline) {
         // The animation is about to start, fire onStart cb
         if (!this.#isRepeating && this.#options.onStart) {
