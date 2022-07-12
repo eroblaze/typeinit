@@ -24,6 +24,7 @@ export interface OptionsInterface {
   visibleOptions?: VisibleOptionsType | VisibleOptionsTypeCombine;
   onStart?: () => void;
   onEnd?: () => void;
+  onReset?: () => void;
   onCharTyped?: () => void;
   onCharDeleted?: () => void;
 

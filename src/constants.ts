@@ -69,6 +69,11 @@ export const defaultOptions: OptionsInterface = {
   onEnd: undefined,
 
   /**
+   * After reset
+   */
+  onReset: undefined,
+
+  /**
    * After each character is typed
    */
   onCharTyped: undefined,

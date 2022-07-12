@@ -37,7 +37,7 @@ npm install typeinit
 #### via CDN
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/typeinit@1.2.2/dist/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/typeinit@1.2.3/dist/index.umd.js"></script>
 ```
 
 ## Setup
@@ -65,7 +65,7 @@ With CDN
   <body>
     <div class="element"></div>
     <!-- Typeinit CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/typeinit@1.2.2/dist/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/typeinit@1.2.3/dist/index.umd.js"></script>
     <script>
       const typeinit = new Typeinit(".element");
       typeinit.type("Hello world!").play();
@@ -139,6 +139,11 @@ const typeinit = new Typeinit(".element", {
    * All typing is complete
    */
   onEnd: () => {},
+
+  /**
+   * After reset
+   */
+  onReset: () => {},
 
   /**
    * After each character is typed

@@ -73,6 +73,7 @@ export default class Typeinit implements TypeinitInterface {
       onStart,
       onCharTyped,
       onCharDeleted,
+      onReset,
     } = optionsObj;
 
     this.#options = {
@@ -94,6 +95,7 @@ export default class Typeinit implements TypeinitInterface {
       onStart: onStart!,
       onCharTyped: onCharTyped!,
       onCharDeleted: onCharDeleted!,
+      onReset: onReset!,
     };
 
     // Show the caret
@@ -133,7 +135,8 @@ export default class Typeinit implements TypeinitInterface {
             option === "onStart" ||
             option === "onEnd" ||
             option === "onCharTyped" ||
-            option === "onCharDeleted"
+            option === "onCharDeleted" ||
+            option === "onReset"
           ) {
             if (typeof value === "function") {
               newOptionObj[option] = value;
@@ -654,6 +657,11 @@ export default class Typeinit implements TypeinitInterface {
     }
     this.#resetCalled = true;
     await this.#_delAll(false, { delay: 0 });
+
+    // Trigger the onReset() cb if given
+    if (this.#options.onReset) {
+      this.#options.onReset();
+    }
 
     this.#intervalId = 0 as unknown as NodeJS.Timeout;
     this.#playCalled = false;

@@ -122,6 +122,27 @@ describe("TYPEINIT INIT", () => {
         .play();
     }));
 
+  test("reset() cb is called", () =>
+    new Promise<void>((done) => {
+      expect.assertions(1);
+      let count = 0;
+
+      const typeinit = new Typeinit(".div", {
+        typingSpeed: 0,
+        deletingSpeed: 0,
+        onEnd: () => {
+          if (count < 1) {
+            typeinit.reset();
+            count++;
+          } else done();
+        },
+        onReset: () => {
+          expect(true).toBeTruthy();
+        },
+      });
+      typeinit.type("test").play();
+    }));
+
   test("onCharTyped() cb is called", () =>
     new Promise<void>((done) => {
       expect.assertions(4);
