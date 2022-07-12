@@ -93,6 +93,21 @@ describe("TYPEINIT INIT", () => {
         .play();
     }));
 
+  test("onStart() cb is called only once", () =>
+    new Promise<void>((done) => {
+      expect.assertions(1);
+      new Typeinit(".div", {
+        typingSpeed: 0,
+        onStart: () => {
+          expect(true).toBeTruthy();
+        },
+        onEnd: () => done(),
+      })
+        .type("test")
+        .type("hey")
+        .play();
+    }));
+
   test("onEnd() cb is called", () =>
     new Promise<void>((done) => {
       expect.assertions(1);

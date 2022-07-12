@@ -219,7 +219,7 @@ export default class Typeinit implements TypeinitInterface {
         display: inline-block;
         width: ${this.#options.caretWidth}px;
         height: 0.9em;
-        transform: translateY(9%);
+        transform: translateY(7%);
         border-radius: 3rem;
         animation: blink-${this.#caretClass} 1s infinite;
     }
@@ -652,6 +652,7 @@ export default class Typeinit implements TypeinitInterface {
       this.#controller.abort();
       this.#controller = new AbortController();
     }
+    this.#resetCalled = true;
     await this.#_delAll(false, { delay: 0 });
 
     this.#intervalId = 0 as unknown as NodeJS.Timeout;
@@ -659,7 +660,6 @@ export default class Typeinit implements TypeinitInterface {
     this.#isRepeating = false;
     this.#repeatCount = 0;
     this.#numOfEntry = 0;
-    this.#resetCalled = true;
 
     this.#_play();
   }
@@ -697,11 +697,11 @@ export default class Typeinit implements TypeinitInterface {
         }
         await this.#delay(this.#options.startDelay);
       }
+      // The animation is about to start, fire onStart cb
+      if (!this.#isRepeating && this.#options.onStart) {
+        this.#options.onStart();
+      }
       for (const action of this.#timeline) {
-        // The animation is about to start, fire onStart cb
-        if (!this.#isRepeating && this.#options.onStart) {
-          this.#options.onStart();
-        }
         const [func, args] = [action[0], action[1]];
         await func.call(this, ...args);
       }
