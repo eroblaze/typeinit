@@ -1,6 +1,6 @@
 {
   "name": "typeinit",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "An Intuitive Javascript Typing Animation Library",
   "main": "./dist/index.umd.js",
   "module": "./dist/index.es.js",
@@ -44,8 +44,8 @@
   },
   "homepage": "https://github.com/eroblaze/typeinit#readme",
   "devDependencies": {
+    "@rollup/plugin-typescript": "^8.3.3",
     "happy-dom": "^6.0.0",
-    "rollup-plugin-typescript2": "^0.32.1",
     "tslib": "^2.4.0",
     "typescript": "^4.7.4",
     "vite": "^2.9.9",

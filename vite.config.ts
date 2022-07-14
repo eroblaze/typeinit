@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 
 import { defineConfig } from "vite";
-import typescript2 from "rollup-plugin-typescript2";
+import typescript from "@rollup/plugin-typescript";
 const path = require("path");
 
 export default defineConfig({
@@ -13,14 +13,7 @@ export default defineConfig({
       formats: ["es", "umd"], // This is the default
     },
     rollupOptions: {
-      plugins: [
-        {
-          ...typescript2({
-            abortOnError: false, // For some reason, they are not reading my types...
-            useTsconfigDeclarationDir: true,
-          }),
-        },
-      ],
+      plugins: [typescript()],
     },
   },
   test: {
