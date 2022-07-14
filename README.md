@@ -22,7 +22,7 @@ Typeinit is a javascript typing animation library which is easy and intuitive to
 - Offers a chainable API for ease of use.
 - Choose to delay the animation until the target element becomes visible on the screen.
 - Define strings to type programmatically or in the HTML (a useful fallback in case the user doesn't have JavaScript enabled, as well as for SEO).
-- Style the color of the caret with any CSS color syntax (gradients work too😋).
+- Style the color of the caret with any CSS color syntax (gradients work too 😋).
 - Responsive: the caret shrinks or grows in relation to the font size specified.
 - Fire callback functions when a character is typed, deleted, or when repeating.
 
