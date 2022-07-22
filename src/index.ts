@@ -220,10 +220,9 @@ export default class Typeinit implements TypeinitInterface {
     style.innerHTML = `
     .${this.#caretClass} {
         display: inline-block;
-        width: ${this.#options.caretWidth}px;
         height: 0.9em;
         transform: translateY(7%);
-        border-radius: 3rem;
+        border-radius: 100vmax;
         animation: blink-${this.#caretClass} 1s infinite;
     }
 
@@ -257,6 +256,7 @@ export default class Typeinit implements TypeinitInterface {
     c.classList.add(this.#caretClass);
     c.setAttribute("aria-hidden", "true");
     c.style.background = this.#options.caretColor;
+    c.style.width = `${this.#options.caretWidth}px`;
     this.#element.appendChild(c);
   }
 
