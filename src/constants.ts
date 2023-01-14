@@ -69,9 +69,14 @@ export const defaultOptions: OptionsInterface = {
   onEnd: undefined,
 
   /**
-   * After reset
+   * After resetting the Target element
    */
   onReset: undefined,
+
+  /**
+   * After restarting the animation
+   */
+  onRestart: undefined,
 
   /**
    * After each character is typed

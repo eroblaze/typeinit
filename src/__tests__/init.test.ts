@@ -122,7 +122,7 @@ describe("TYPEINIT INIT", () => {
         .play();
     }));
 
-  test("reset() cb is called", () =>
+  test("restart() cb is called", () =>
     new Promise<void>((done) => {
       expect.assertions(1);
       let count = 0;
@@ -132,11 +132,11 @@ describe("TYPEINIT INIT", () => {
         deletingSpeed: 0,
         onEnd: () => {
           if (count < 1) {
-            typeinit.reset();
+            typeinit.restart();
             count++;
           } else done();
         },
-        onReset: () => {
+        onRestart: () => {
           expect(true).toBeTruthy();
         },
       });

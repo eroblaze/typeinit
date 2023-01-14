@@ -24,7 +24,7 @@ export interface OptionsInterface {
   visibleOptions?: VisibleOptionsType | VisibleOptionsTypeCombine;
   onStart?: () => void;
   onEnd?: () => void;
-  onReset?: () => void;
+  onRestart?: () => void;
   onCharTyped?: () => void;
   onCharDeleted?: () => void;
 
@@ -60,5 +60,7 @@ export interface TypeinitInterface {
     ease: boolean,
     deleteAllOptions: DeleteAllOptionsInterface
   ) => WriterType;
+  reset: () => void;
+  restart: () => void;
   play: () => void;
 }

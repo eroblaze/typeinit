@@ -141,9 +141,14 @@ const typeinit = new Typeinit(".element", {
   onEnd: () => {},
 
   /**
-   * After reset
+   * After resetting the Target element
    */
   onReset: () => {},
+
+  /**
+   * After restarting the animation
+   */
+  onRestart: () => {},
 
   /**
    * After each character is typed
