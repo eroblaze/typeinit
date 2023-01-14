@@ -5,7 +5,7 @@ const addInnerText = (innerText?: string) => {
   return `<div class="div">${innerText ? innerText : ""}</div>`;
 };
 
-describe("TYPEINIT API METHODS", () => {
+describe.only("TYPEINIT API METHODS", () => {
   beforeEach(() => {
     document.body.innerHTML = addInnerText();
   });
@@ -130,6 +130,66 @@ describe("TYPEINIT API METHODS", () => {
 
   test("reset()", () =>
     new Promise<void>((done) => {
+      expect.assertions(2);
+
+      document.body.innerHTML = addInnerText("Former Text");
+
+      let typeinit: Typeinit | undefined = undefined;
+
+      const _reset = () => {
+        done();
+
+        expect(document.querySelector(".div")?.childElementCount).toBe(14);
+
+        typeinit?.reset();
+
+        expect(document.querySelector(".div")?.innerHTML).toBe("Former Text");
+      };
+
+      typeinit = new Typeinit(".div", {
+        caret: false,
+        typingSpeed: 0,
+        onEnd: _reset,
+      });
+
+      typeinit.type("add").play();
+    }));
+
+  test("The animation stops and resets immediately reset() is called", () =>
+    new Promise<void>((done) => {
+      document.body.innerHTML = addInnerText("four");
+      let typeinit: Typeinit | undefined = undefined;
+      let count = 0;
+
+      typeinit = new Typeinit(".div", {
+        caret: false,
+        typingSpeed: 0,
+        // onCharTyped: () => {
+        //   if (count === 5) {
+        //     // The initial text 'four' + 'te' has been typed
+        //     typeinit?.reset();
+        //   } else {
+        //     count++;
+        //   }
+        // },
+        onCharDeleted: () => {
+          if (count === 1) {
+            typeinit?.reset();
+          } else {
+            count++;
+          }
+        },
+        onReset: () => {
+          done();
+          expect(document.querySelector(".div")?.innerHTML).toBe("four");
+        },
+      });
+
+      typeinit.type("test").newLine(2).type("hello").delete(3).play();
+    }));
+
+  test("restart()", () =>
+    new Promise<void>((done) => {
       expect.assertions(8);
       let count = 0;
 
@@ -141,7 +201,7 @@ describe("TYPEINIT API METHODS", () => {
         },
         onEnd: () => {
           if (count < 1) {
-            typeinit.reset();
+            typeinit.restart();
             count++;
           } else done();
         },

@@ -24,7 +24,7 @@ import { defaultOptions } from "./constants";
  * @returns {Object} a new Typeinit Object
  */
 export default class Typeinit implements TypeinitInterface {
-  #element: HTMLElement;
+  #element: HTMLElement | undefined;
   #options: Required<OptionsInterface>;
   #timeline: [Function, TimelineType][] = [];
   #intervalId = 0 as unknown as NodeJS.Timeout;
@@ -34,7 +34,8 @@ export default class Typeinit implements TypeinitInterface {
   #caretClass = "typeinit__caret";
   #repeatCount = 0;
   #numOfEntry = 0;
-  #resetCalled = false;
+  #restartCalled = false;
+  #initialTextContent = "";
 
   constructor(selector: HTMLElement | string, optionsObj?: OptionsInterface) {
     // Check the type of the selector
@@ -73,6 +74,7 @@ export default class Typeinit implements TypeinitInterface {
       onStart,
       onCharTyped,
       onCharDeleted,
+      onRestart,
       onReset,
     } = optionsObj;
 
@@ -95,6 +97,7 @@ export default class Typeinit implements TypeinitInterface {
       onStart: onStart!,
       onCharTyped: onCharTyped!,
       onCharDeleted: onCharDeleted!,
+      onRestart: onRestart!,
       onReset: onReset!,
     };
 
@@ -110,6 +113,7 @@ export default class Typeinit implements TypeinitInterface {
    * @private
    */
   #_init() {
+    if (!this.#element) return;
     const display = getDefaultDisplay(this.#element);
     if (display === "inline") {
       this.#element.style.display = "inline-block";
@@ -136,6 +140,7 @@ export default class Typeinit implements TypeinitInterface {
             option === "onEnd" ||
             option === "onCharTyped" ||
             option === "onCharDeleted" ||
+            option === "onRestart" ||
             option === "onReset"
           ) {
             if (typeof value === "function") {
@@ -184,9 +189,11 @@ export default class Typeinit implements TypeinitInterface {
    * @private
    */
   #_checkElementTextContent() {
+    if (!this.#element) return;
     const textContent = this.#element.textContent?.trim();
     if (textContent) {
       this.#element.innerHTML = "";
+      this.#initialTextContent = textContent;
       this.type(textContent);
     }
   }
@@ -251,6 +258,7 @@ export default class Typeinit implements TypeinitInterface {
    */
   #_createCaret() {
     // Check if there is already a caret in the element i.e a previous instance has typed in it, if so just return
+    if (!this.#element) return;
     if (this.#element.querySelector(`.${this.#caretClass}`)) return;
     const c = createEl("span", "");
     c.classList.add(this.#caretClass);
@@ -265,11 +273,12 @@ export default class Typeinit implements TypeinitInterface {
    * @private
    */
   #_removeCaretBlinking() {
+    if (!this.#element) return;
     if (this.#options.caret) {
       const caret = this.#element.querySelector(
         `.${this.#caretClass}`
       ) as HTMLElement;
-      if (caret.style.animationDuration !== "0s")
+      if (caret?.style.animationDuration !== "0s")
         caret.style.animationDuration = "0s";
     }
   }
@@ -279,6 +288,7 @@ export default class Typeinit implements TypeinitInterface {
    * @private
    */
   #_addCaretBlinking() {
+    if (!this.#element) return;
     if (this.#options.caret) {
       const caret = this.#element.querySelector(
         `.${this.#caretClass}`
@@ -315,6 +325,26 @@ export default class Typeinit implements TypeinitInterface {
   }
 
   /**
+   * Resets all the class private variables
+   * @private
+   */
+  #destroy() {
+    clearInterval(this.#intervalId);
+    this.#intervalId = 0 as unknown as NodeJS.Timeout;
+
+    this.#controller.abort();
+    this.#controller = new AbortController();
+
+    this.#timeline = [];
+
+    this.#playCalled = false;
+    this.#isRepeating = false;
+    this.#repeatCount = 0;
+    this.#numOfEntry = 0;
+    this.#restartCalled = false;
+  }
+
+  /**
    * Types out each character
    * @param {string} message the string to type
    * @returns {Object} a typeinit Object
@@ -334,10 +364,13 @@ export default class Typeinit implements TypeinitInterface {
    * @private
    */
   async #_type(message: string) {
+    if (!this.#element) return;
     this.#_removeCaretBlinking();
 
     // put each character in a span
     for (const ch of message) {
+      if (!this.#element) return;
+
       const chSpan = createEl("span", ch);
       this.#numOfEntry++;
       if (this.#options.caret) {
@@ -399,6 +432,8 @@ export default class Typeinit implements TypeinitInterface {
    * @private
    */
   async #_del(numToDel: number, deleteOptions?: DeleteOptionsInterface) {
+    if (!this.#element) return;
+
     const mode = deleteOptions?.mode ?? "char";
     const speed = deleteOptions?.speed ?? this.#options.deletingSpeed;
     const deleteDelay = deleteOptions?.delay ?? this.#options.deleteDelay;
@@ -411,6 +446,8 @@ export default class Typeinit implements TypeinitInterface {
 
       if (mode === "char") {
         for (let i = 0; i < numToDel; i++) {
+          if (!this.#element) return;
+
           this.#numOfEntry--;
           this.#element.removeChild(
             getLastChild(this.#element, this.#options.caret)
@@ -430,6 +467,7 @@ export default class Typeinit implements TypeinitInterface {
           this.#element.childElementCount > numOfChildrenToCheck &&
           numToDelCount < numToDel
         ) {
+          if (!this.#element) return;
           // Run for each word to delete
           while (this.#element.childElementCount > numOfChildrenToCheck) {
             this.#numOfEntry--;
@@ -533,6 +571,7 @@ export default class Typeinit implements TypeinitInterface {
 
     const numOfChildrenToCheck = this.#options.caret ? 1 : 0;
 
+    if (!this.#element) return;
     if (this.#element.childElementCount > numOfChildrenToCheck) {
       // Pause a bit before deleting
       await this.#delay(deleteDelay);
@@ -541,22 +580,26 @@ export default class Typeinit implements TypeinitInterface {
         // Remove all the characters the same time
         let numOfEntry = 0;
         while (numOfEntry < this.#numOfEntry) {
+          if (!this.#element) return;
+
           getLastChild(this.#element, this.#options.caret).remove();
           numOfEntry++;
         }
         this.#numOfEntry = 0;
-        // Fire the onCharDeleted cb if reset() wasn't called
-        if (!this.#resetCalled) {
+        // Fire the onCharDeleted cb if restart() wasn't called
+        if (!this.#restartCalled) {
           // fire onCharDeleted cb
           if (this.#options.onCharDeleted) {
             this.#options.onCharDeleted();
           }
         } else {
-          this.#resetCalled = false;
+          this.#restartCalled = false;
         }
       } else {
         let numOfEntry = 0;
         while (numOfEntry < this.#numOfEntry) {
+          if (!this.#element) return;
+
           this.#element.removeChild(
             getLastChild(this.#element, this.#options.caret)
           );
@@ -592,9 +635,12 @@ export default class Typeinit implements TypeinitInterface {
    * @private
    */
   async #_newLine(numOfLines: number) {
+    if (!this.#element) return;
     this.#_removeCaretBlinking();
 
     for (let i = 0; i < numOfLines; i++) {
+      if (!this.#element) return;
+
       this.#numOfEntry++;
 
       const line = createEl("br", "");
@@ -638,29 +684,52 @@ export default class Typeinit implements TypeinitInterface {
   }
 
   /**
-   * Resets the typing animation
+   * Resets the Target element and destroys the Typeinit instance.
    * @public
+   *
    */
   public reset() {
-    this.#_reset();
+    this.#destroy();
+
+    if (this.#initialTextContent) {
+      if (!this.#element) return;
+      this.#element.innerHTML = this.#initialTextContent;
+    }
+
+    this.#element = undefined;
+    this.#initialTextContent = "";
+
+    if (this.#options.onReset) {
+      this.#options.onReset();
+    }
+
+    this.#options = defaultOptions as Required<OptionsInterface>; // Goes back to the defaults
   }
 
   /**
-   * Clear the current timeoutId and reset all related variables
+   * Restarts the typing animation
+   * @public
+   */
+  public restart() {
+    this.#_restart();
+  }
+
+  /**
+   * Clear the current timeoutId and restart all related variables
    * @private
    */
-  async #_reset() {
+  async #_restart() {
     clearInterval(this.#intervalId);
     if (this.#options.waitUntilVisible) {
       this.#controller.abort();
       this.#controller = new AbortController();
     }
-    this.#resetCalled = true;
+    this.#restartCalled = true;
     await this.#_delAll(false, { delay: 0 });
 
-    // Trigger the onReset() cb if given
-    if (this.#options.onReset) {
-      this.#options.onReset();
+    // Trigger the onRestart() cb if given
+    if (this.#options.onRestart) {
+      this.#options.onRestart();
     }
 
     this.#intervalId = 0 as unknown as NodeJS.Timeout;
@@ -687,6 +756,7 @@ export default class Typeinit implements TypeinitInterface {
   async #_play() {
     // Set this.#playCalled to true to prevent multiple references of a Typeinit instance from adding to the timeline after play has been called once
     if (!this.#playCalled || this.#isRepeating) {
+      if (!this.#element) return;
       this.#playCalled = true;
 
       if (!this.#isRepeating) {
@@ -699,7 +769,7 @@ export default class Typeinit implements TypeinitInterface {
               this.#controller
             );
           } catch {
-            // reset() was called so just return out of this function
+            // restart() was called so just return out of this function
             return;
           }
         }
@@ -710,6 +780,8 @@ export default class Typeinit implements TypeinitInterface {
         this.#options.onStart();
       }
       for (const action of this.#timeline) {
+        if (!this.#element) return;
+
         const [func, args] = [action[0], action[1]];
         await func.call(this, ...args);
       }

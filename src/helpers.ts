@@ -43,7 +43,7 @@ export function waitUntilVisibleFunc(
   const vPortHeight = window.innerHeight;
 
   return new Promise<void>((res, rej) => {
-    // If reset was called when the element wasn't visible, just reject the promise
+    // If restart was called when the element wasn't visible, just reject the promise
     controller.signal.addEventListener("abort", () => {
       rej();
     });
