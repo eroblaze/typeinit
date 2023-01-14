@@ -5,7 +5,7 @@ const addInnerText = (innerText?: string) => {
   return `<div class="div">${innerText ? innerText : ""}</div>`;
 };
 
-describe.only("TYPEINIT API METHODS", () => {
+describe("TYPEINIT API METHODS", () => {
   beforeEach(() => {
     document.body.innerHTML = addInnerText();
   });
