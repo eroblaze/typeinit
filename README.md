@@ -162,6 +162,10 @@ const typeinit = new Typeinit(".element", {
 });
 ```
 
+## Documentation
+
+All of Typeinit's documentation can be found at [https://typeinit-docs.vercel.app](https://typeinit-docs.vercel.app).
+
 ## Contribution
 
 Check out [CONTRIBUTING.md](./CONTRIBUTING.md) file to get started.
