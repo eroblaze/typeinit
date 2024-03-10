@@ -22,7 +22,7 @@ describe("TYPEINIT API METHODS", () => {
           // This should be called first before assertions inorder to avoid timeouts
           done();
           expect(document.querySelector(".div")?.childElementCount).toBe(4);
-        },
+        }
       });
 
       typeinit.type("test").play();
@@ -37,7 +37,7 @@ describe("TYPEINIT API METHODS", () => {
         onEnd: () => {
           done();
           expect(document.querySelector(".div")?.childElementCount).toBe(2);
-        },
+        }
       });
 
       typeinit.type("test").delete(2, { mode: "char" }).play();
@@ -53,10 +53,26 @@ describe("TYPEINIT API METHODS", () => {
           done();
           // childElementCount should be 5 i.e -> f,a,s,t + space
           expect(document.querySelector(".div")?.childElementCount).toBe(5);
-        },
+        }
       });
 
       typeinit.type("fast in and out").delete(3, { mode: "word" }).play();
+    }));
+
+  test("delete() with mode: 'char' does not throw an error when 'numToDel' is more than the characters in the element", () =>
+    new Promise<void>((done) => {
+      // First of all type 4 characters, then delete 6.
+      // After deleting, the element should be empty so type a new text and test the number of characters in the element.
+      const typeinit = new Typeinit(".div", {
+        caret: false,
+        deletingSpeed: 0,
+        onEnd: () => {
+          done();
+          expect(document.querySelector(".div")?.childElementCount).toBe(7);
+        }
+      });
+
+      typeinit.type("test").delete(6, { mode: "char" }).type("testing").play();
     }));
 
   test("newLine() without an argument defaults to 1 new line", () =>
@@ -72,7 +88,7 @@ describe("TYPEINIT API METHODS", () => {
           done();
           expect(div.childElementCount).toBe(1);
           expect(onlyChild).toBe("BR");
-        },
+        }
       });
 
       typeinit.newLine().play();
@@ -93,7 +109,7 @@ describe("TYPEINIT API METHODS", () => {
           expect(div.childElementCount).toBe(2);
           expect(firstChild).toBe("BR");
           expect(lastChild).toBe("BR");
-        },
+        }
       });
 
       typeinit.newLine(2).play();
@@ -107,7 +123,7 @@ describe("TYPEINIT API METHODS", () => {
         onEnd: () => {
           done();
           expect(document.querySelector(".div")?.childElementCount).toBe(0);
-        },
+        }
       });
 
       typeinit.type("test").deleteAll(false).play(); // I'm removing 'ease' here to make the test a bit faster
@@ -120,7 +136,7 @@ describe("TYPEINIT API METHODS", () => {
         onEnd: () => {
           done();
           expect(document.querySelector(".div")?.childElementCount).toBe(0);
-        },
+        }
       });
 
       typeinit.type("test").deleteAll(false).play();
@@ -149,7 +165,7 @@ describe("TYPEINIT API METHODS", () => {
       typeinit = new Typeinit(".div", {
         caret: false,
         typingSpeed: 0,
-        onEnd: _reset,
+        onEnd: _reset
       });
 
       typeinit.type("add").play();
@@ -182,7 +198,7 @@ describe("TYPEINIT API METHODS", () => {
         onReset: () => {
           done();
           expect(document.querySelector(".div")?.innerHTML).toBe("four");
-        },
+        }
       });
 
       typeinit.type("test").newLine(2).type("hello").delete(3).play();
@@ -204,7 +220,7 @@ describe("TYPEINIT API METHODS", () => {
             typeinit.restart();
             count++;
           } else done();
-        },
+        }
       });
       typeinit.type("test").play();
     }));

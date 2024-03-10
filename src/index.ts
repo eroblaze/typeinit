@@ -4,7 +4,7 @@ import {
   OptionsInterface,
   TimelineType,
   TypeinitInterface,
-  WriterType,
+  WriterType
 } from "./types";
 
 import {
@@ -12,7 +12,7 @@ import {
   getLastChild,
   waitUntilVisibleFunc,
   isNumber,
-  getDefaultDisplay,
+  getDefaultDisplay
 } from "./helpers";
 
 import { defaultOptions } from "./constants";
@@ -75,7 +75,7 @@ export default class Typeinit implements TypeinitInterface {
       onCharTyped,
       onCharDeleted,
       onRestart,
-      onReset,
+      onReset
     } = optionsObj;
 
     this.#options = {
@@ -98,7 +98,7 @@ export default class Typeinit implements TypeinitInterface {
       onCharTyped: onCharTyped!,
       onCharDeleted: onCharDeleted!,
       onRestart: onRestart!,
-      onReset: onReset!,
+      onReset: onReset!
     };
 
     // Show the caret
@@ -148,17 +148,13 @@ export default class Typeinit implements TypeinitInterface {
             } else {
               // Not a function, use the default value which is 'undefined'
               newOptionObj[option] = dValue;
-              console.warn(
-                `${value} is not of type 'function' or '${typeof dValue}'`
-              );
+              console.warn(`${value} is not of type 'function' or '${typeof dValue}'`);
             }
           } else if (option === "repeat") {
             if (value === "infinite") newOptionObj[option] = value;
             else {
               newOptionObj[option] = dValue;
-              console.warn(
-                `${value} is not of type 'infinite' or '${typeof dValue}'`
-              );
+              console.warn(`${value} is not of type 'infinite' or '${typeof dValue}'`);
             }
           } else {
             // Use the default value instead
@@ -275,11 +271,8 @@ export default class Typeinit implements TypeinitInterface {
   #_removeCaretBlinking() {
     if (!this.#element) return;
     if (this.#options.caret) {
-      const caret = this.#element.querySelector(
-        `.${this.#caretClass}`
-      ) as HTMLElement;
-      if (caret?.style.animationDuration !== "0s")
-        caret.style.animationDuration = "0s";
+      const caret = this.#element.querySelector(`.${this.#caretClass}`) as HTMLElement;
+      if (caret?.style.animationDuration !== "0s") caret.style.animationDuration = "0s";
     }
   }
 
@@ -290,11 +283,8 @@ export default class Typeinit implements TypeinitInterface {
   #_addCaretBlinking() {
     if (!this.#element) return;
     if (this.#options.caret) {
-      const caret = this.#element.querySelector(
-        `.${this.#caretClass}`
-      ) as HTMLElement;
-      if (caret.style.animationDuration !== "1s")
-        caret.style.animationDuration = "1s";
+      const caret = this.#element.querySelector(`.${this.#caretClass}`) as HTMLElement;
+      if (caret.style.animationDuration !== "1s") caret.style.animationDuration = "1s";
     }
   }
 
@@ -419,7 +409,7 @@ export default class Typeinit implements TypeinitInterface {
       this.#_addTimeline(this.#_del, numToDel, {
         mode,
         speed,
-        delay: deleteDelay,
+        delay: deleteDelay
       });
 
     return this;
@@ -445,13 +435,12 @@ export default class Typeinit implements TypeinitInterface {
       await this.#delay(deleteDelay);
 
       if (mode === "char") {
+        numToDel = Math.min(numToDel, this.#element.childElementCount - numOfChildrenToCheck);
         for (let i = 0; i < numToDel; i++) {
           if (!this.#element) return;
 
           this.#numOfEntry--;
-          this.#element.removeChild(
-            getLastChild(this.#element, this.#options.caret)
-          );
+          this.#element.removeChild(getLastChild(this.#element, this.#options.caret));
 
           // fire onCharDeleted cb
           if (this.#options.onCharDeleted) {
@@ -463,10 +452,7 @@ export default class Typeinit implements TypeinitInterface {
         // mode === "word"
         let numToDelCount = 0;
         // Run for the number of words to delete
-        while (
-          this.#element.childElementCount > numOfChildrenToCheck &&
-          numToDelCount < numToDel
-        ) {
+        while (this.#element.childElementCount > numOfChildrenToCheck && numToDelCount < numToDel) {
           if (!this.#element) return;
           // Run for each word to delete
           while (this.#element.childElementCount > numOfChildrenToCheck) {
@@ -533,10 +519,7 @@ export default class Typeinit implements TypeinitInterface {
    * @returns {Object} a typeinit Object
    * @public
    */
-  public deleteAll(
-    ease: boolean = true,
-    deleteAllOptions?: DeleteAllOptionsInterface
-  ) {
+  public deleteAll(ease: boolean = true, deleteAllOptions?: DeleteAllOptionsInterface) {
     const speed = deleteAllOptions?.speed;
     const deleteDelay = deleteAllOptions?.delay;
 
@@ -551,8 +534,7 @@ export default class Typeinit implements TypeinitInterface {
       }
     }
 
-    if (!this.#playCalled)
-      this.#_addTimeline(this.#_delAll, ease, { speed, delay: deleteDelay });
+    if (!this.#playCalled) this.#_addTimeline(this.#_delAll, ease, { speed, delay: deleteDelay });
     return this;
   }
 
@@ -562,10 +544,7 @@ export default class Typeinit implements TypeinitInterface {
    * @param {Object} [deleteAllOptions] sets the speed and delay of the deletion
    * @private
    */
-  async #_delAll(
-    ease: boolean = true,
-    deleteAllOptions?: DeleteAllOptionsInterface
-  ) {
+  async #_delAll(ease: boolean = true, deleteAllOptions?: DeleteAllOptionsInterface) {
     const speed = deleteAllOptions?.speed ?? this.#options.deletingSpeed;
     const deleteDelay = deleteAllOptions?.delay ?? this.#options.deleteDelay;
 
@@ -600,9 +579,7 @@ export default class Typeinit implements TypeinitInterface {
         while (numOfEntry < this.#numOfEntry) {
           if (!this.#element) return;
 
-          this.#element.removeChild(
-            getLastChild(this.#element, this.#options.caret)
-          );
+          this.#element.removeChild(getLastChild(this.#element, this.#options.caret));
           // fire onCharDeleted cb
           if (this.#options.onCharDeleted) {
             this.#options.onCharDeleted();
