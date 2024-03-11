@@ -1,10 +1,9 @@
 import Typeinit from "./index";
 
 export type VisibleOptionsType = "top" | "center" | "bottom";
-export type VisibleOptionsTypeCombine =
-  `${VisibleOptionsType} ${VisibleOptionsType}`;
+export type VisibleOptionsTypeCombine = `${VisibleOptionsType} ${VisibleOptionsType}`;
 
-export type DeleteType = "char" | "word";
+export type DeleteType = "char" | "word" | "c" | "w";
 export type WriterType = Typeinit;
 
 export interface OptionsInterface {
@@ -52,14 +51,8 @@ export interface TypeinitInterface {
   type: (message: string) => WriterType;
   pause: (ms?: number) => WriterType;
   newLine: (numOfLines?: number) => WriterType;
-  delete: (
-    numToDel: number,
-    deleteOptions: DeleteOptionsInterface
-  ) => WriterType;
-  deleteAll: (
-    ease: boolean,
-    deleteAllOptions: DeleteAllOptionsInterface
-  ) => WriterType;
+  delete: (numToDel: number, deleteOptions: DeleteOptionsInterface) => WriterType;
+  deleteAll: (ease: boolean, deleteAllOptions: DeleteAllOptionsInterface) => WriterType;
   reset: () => void;
   restart: () => void;
   play: () => void;

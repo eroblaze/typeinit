@@ -43,6 +43,21 @@ describe("TYPEINIT API METHODS", () => {
       typeinit.type("test").delete(2, { mode: "char" }).play();
     }));
 
+  test("delete() with mode alias: 'c'", () =>
+    new Promise<void>((done) => {
+      // First of all type 4 characters, then delete 2
+      const typeinit = new Typeinit(".div", {
+        caret: false,
+        deletingSpeed: 0,
+        onEnd: () => {
+          done();
+          expect(document.querySelector(".div")?.childElementCount).toBe(2);
+        }
+      });
+
+      typeinit.type("test").delete(2, { mode: "c" }).play();
+    }));
+
   test("delete() with mode: 'word'", () =>
     new Promise<void>((done) => {
       // First of all type 4 words, then delete 3
@@ -58,10 +73,25 @@ describe("TYPEINIT API METHODS", () => {
 
       typeinit.type("fast in and out").delete(3, { mode: "word" }).play();
     }));
+  test("delete() with mode alias: 'w'", () =>
+    new Promise<void>((done) => {
+      // First of all type 4 words, then delete 3
+      const typeinit = new Typeinit(".div", {
+        caret: false,
+        deletingSpeed: 0,
+        onEnd: () => {
+          done();
+          // childElementCount should be 5 i.e -> f,a,s,t + space
+          expect(document.querySelector(".div")?.childElementCount).toBe(5);
+        }
+      });
+
+      typeinit.type("fast in and out").delete(3, { mode: "w" }).play();
+    }));
 
   test("delete() with mode: 'char' does not throw an error when 'numToDel' is more than the characters in the element", () =>
     new Promise<void>((done) => {
-      // First of all type 4 characters, then delete 6.
+      // First of all type 4 characters, then delete 60 characters.
       // After deleting, the element should be empty so type a new text and test the number of characters in the element.
       const typeinit = new Typeinit(".div", {
         caret: false,
@@ -72,7 +102,22 @@ describe("TYPEINIT API METHODS", () => {
         }
       });
 
-      typeinit.type("test").delete(6, { mode: "char" }).type("testing").play();
+      typeinit.type("test").delete(60, { mode: "char" }).type("testing").play();
+    }));
+
+  test("delete() with mode: 'word' does not throw an error when 'numToDel' is more than the number of words in the element", () =>
+    // First of all type 4 words, then delete 50 words
+    new Promise<void>((done) => {
+      const typeinit = new Typeinit(".div", {
+        caret: false,
+        deletingSpeed: 0,
+        onEnd: () => {
+          done();
+          expect(document.querySelector(".div")?.childElementCount).toBe(4);
+        }
+      });
+
+      typeinit.type("fast in and out").delete(50, { mode: "word" }).type("more").play();
     }));
 
   test("newLine() without an argument defaults to 1 new line", () =>

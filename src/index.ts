@@ -1,6 +1,7 @@
 import {
   DeleteAllOptionsInterface,
   DeleteOptionsInterface,
+  DeleteType,
   OptionsInterface,
   TimelineType,
   TypeinitInterface,
@@ -387,7 +388,7 @@ export default class Typeinit implements TypeinitInterface {
    * @public
    */
   public delete(numToDel: number = 1, deleteOptions?: DeleteOptionsInterface) {
-    const mode = deleteOptions?.mode;
+    let mode = deleteOptions?.mode;
     const speed = deleteOptions?.speed;
     const deleteDelay = deleteOptions?.delay;
 
@@ -395,8 +396,9 @@ export default class Typeinit implements TypeinitInterface {
       throw new Error(`'${numToDel}' must be a number`);
     }
     if (mode) {
-      if (mode !== "char" && mode !== "word") {
-        throw new Error("mode must be either 'word' or 'char'");
+      mode = mode.toLowerCase() as DeleteType;
+      if (mode !== "char" && mode !== "c" && mode !== "word" && mode !== "w") {
+        throw new Error("mode must be either 'word', 'w','char' or 'c'");
       }
     }
     if (deleteDelay) {
@@ -434,7 +436,7 @@ export default class Typeinit implements TypeinitInterface {
       // Pause a bit before deleting
       await this.#delay(deleteDelay);
 
-      if (mode === "char") {
+      if (mode === "char" || mode == "c") {
         numToDel = Math.min(numToDel, this.#element.childElementCount - numOfChildrenToCheck);
         for (let i = 0; i < numToDel; i++) {
           if (!this.#element) return;
@@ -449,7 +451,7 @@ export default class Typeinit implements TypeinitInterface {
           await this.#delay(speed);
         }
       } else {
-        // mode === "word"
+        // mode === "word" || 'w'
         let numToDelCount = 0;
         // Run for the number of words to delete
         while (this.#element.childElementCount > numOfChildrenToCheck && numToDelCount < numToDel) {
